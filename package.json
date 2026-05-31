@@ -1,0 +1,21 @@
+{
+  "name": "vinted-sniper-bot",
+  "version": "1.0.0",
+  "description": "Un bot ultra-rapide pour surveiller Vinted et envoyer les meilleures offres sur Discord avec liens d'achat 1-clic",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.2",
+    "discord.js": "^14.26.4",
+    "dotenv": "^16.4.5",
+    "express": "^5.2.1",
+    "http-proxy-agent": "^9.0.0",
+    "https-proxy-agent": "^9.0.0",
+    "playwright": "^1.44.1",
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  }
+}
