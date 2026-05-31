@@ -231,8 +231,9 @@ export async function fetchSellerProfile(userId) {
     }
     return null;
   } catch (error) {
-    // Ne pas encombrer les logs avec les limites de taux (429) qui sont gérées silencieusement
-    if (!error.response || error.response.status !== 429) {
+    // Sourdine ultra-robuste pour tous les types d'erreurs 429 (blocage d'API de taux)
+    const isRateLimit = error.response?.status === 429 || error.message?.includes('429');
+    if (!isRateLimit) {
       console.warn(`[API] Impossible de récupérer le profil vendeur #${userId}:`, error.message);
     }
     return null;
