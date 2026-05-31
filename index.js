@@ -10,15 +10,13 @@ import { sendDiscordAlert, SLASH_COMMANDS, handleInteraction, handleMessage } fr
 
 dotenv.config();
 
-// Tenter d'installer automatiquement le navigateur si on est sur Render
+// Tenter d'installer automatiquement le navigateur au démarrage
 try {
-  if (process.env.RENDER) {
-    console.log('[BOT] Détection de l\'environnement Render. Téléchargement forcé du navigateur Chromium...');
-    execSync('npx playwright install chromium', { stdio: 'inherit' });
-    console.log('[BOT] Navigateur Chromium installé avec succès au démarrage !');
-  }
+  console.log('[BOT] Initialisation et vérification des dépendances du navigateur...');
+  execSync('npx playwright install chromium', { stdio: 'inherit' });
+  console.log('[BOT] Navigateur prêt !');
 } catch (err) {
-  console.error('[BOT] Erreur lors de l\'installation du navigateur au démarrage :', err.message);
+  console.error('[BOT] Note d\'initialisation du navigateur :', err.message);
 }
 
 const __filename = fileURLToPath(import.meta.url);
