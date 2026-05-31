@@ -3,11 +3,23 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import express from 'express';
+import { execSync } from 'child_process';
 import { Client, GatewayIntentBits, ActivityType } from 'discord.js';
 import { fetchVintedItems, fetchSellerProfile } from './src/vintedApi.js';
 import { sendDiscordAlert, SLASH_COMMANDS, handleInteraction, handleMessage } from './src/discord.js';
 
 dotenv.config();
+
+// Tenter d'installer automatiquement le navigateur si on est sur Render
+try {
+  if (process.env.RENDER) {
+    console.log('[BOT] Détection de l\'environnement Render. Téléchargement forcé du navigateur Chromium...');
+    execSync('npx playwright install chromium', { stdio: 'inherit' });
+    console.log('[BOT] Navigateur Chromium installé avec succès au démarrage !');
+  }
+} catch (err) {
+  console.error('[BOT] Erreur lors de l\'installation du navigateur au démarrage :', err.message);
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -235,49 +247,49 @@ async function monitorLoop() {
             // --- CAS 1 : ARTICLE DÉJÀ VU → Vérifier la baisse de prix ---
             if (seenItems.has(item.id)) {
               const previousPrice = seenItems.get(item.id);
-                            // Si le prix a baissé, c'est une alerte de baisse de prix
-               if (currentPrice > 0 && previousPrice > 0 && currentPrice < previousPrice) {
-                 // Mettre à jour le prix dans le cache
-                 seenItems.set(item.id, currentPrice);
-                 
-                 if (!isFirstRun) {
-                   priceDropCount++;
-                   const dropPct = (((previousPrice - currentPrice) / previousPrice) * 100).toFixed(0);
-                   console.log(`[📉 BAISSE] Article ${item.id} ("${item.title}") : ${previousPrice.toFixed(2)} € → ${currentPrice.toFixed(2)} € (-${dropPct}%)`);
-                   
-                   const dropOptions = {
-                     ping: search.ping || '',
-                     priceDrop: {
-                       oldPrice: previousPrice,
-                       newPrice: currentPrice
-                     }
-                   };
+              // Si le prix a baissé, c'est une alerte de baisse de prix
+              if (currentPrice > 0 && previousPrice > 0 && currentPrice < previousPrice) {
+                // Mettre à jour le prix dans le cache
+                seenItems.set(item.id, currentPrice);
+                
+                if (!isFirstRun) {
+                  priceDropCount++;
+                  const dropPct = (((previousPrice - currentPrice) / previousPrice) * 100).toFixed(0);
+                  console.log(`[📉 BAISSE] Article ${item.id} ("${item.title}") : ${previousPrice.toFixed(2)} € → ${currentPrice.toFixed(2)} € (-${dropPct}%)`);
+                  
+                  const dropOptions = {
+                    ping: search.ping || '',
+                    priceDrop: {
+                      oldPrice: previousPrice,
+                      newPrice: currentPrice
+                    }
+                  };
 
-                   // 1. Envoi instantané au salon Premium (Webhook spécifique)
-                   if (search.webhook && search.webhook !== 'ENTREZ_VOTRE_WEBHOOK_DISCORD_ICI') {
-                     console.log(`[⚡ PREMIUM BAISSE] Envoi immédiat baisse de prix pour l'article ${item.id} dans #${search.name}`);
-                     await sendDiscordAlert(search.webhook, item, dropOptions);
-                   }
+                  // 1. Envoi instantané au salon Premium (Webhook spécifique)
+                  if (search.webhook && search.webhook !== 'ENTREZ_VOTRE_WEBHOOK_DISCORD_ICI') {
+                    console.log(`[⚡ PREMIUM BAISSE] Envoi immédiat baisse de prix pour l'article ${item.id} dans #${search.name}`);
+                    await sendDiscordAlert(search.webhook, item, dropOptions);
+                  }
 
-                   // 2. Envoi retardé au salon Public (Webhook global #toutes-alertes)
-                   if (webhookUrl && webhookUrl !== 'ENTREZ_VOTRE_WEBHOOK_DISCORD_ICI') {
-                     const delayMs = config.freeAlertDelayMs || 180000; // 3 minutes
-                     const sendAt = Date.now() + delayMs;
-                     console.log(`[⏱️ RETARDATEUR BAISSE] Baisse de prix article ${item.id} mise en file d'attente pour le salon public (envoi dans ${delayMs / 1000}s).`);
-                     delayedAlertsQueue.push({
-                       webhookUrl,
-                       item,
-                       options: {
-                         ping: '', 
-                         priceDrop: dropOptions.priceDrop
-                       },
-                       sendAt
-                     });
-                   }
+                  // 2. Envoi retardé au salon Public (Webhook global #toutes-alertes)
+                  if (webhookUrl && webhookUrl !== 'ENTREZ_VOTRE_WEBHOOK_DISCORD_ICI') {
+                    const delayMs = config.freeAlertDelayMs || 180000; // 3 minutes
+                    const sendAt = Date.now() + delayMs;
+                    console.log(`[⏱️ RETARDATEUR BAISSE] Baisse de prix article ${item.id} mise en file d'attente pour le salon public (envoi dans ${delayMs / 1000}s).`);
+                    delayedAlertsQueue.push({
+                      webhookUrl,
+                      item,
+                      options: {
+                        ping: '', 
+                        priceDrop: dropOptions.priceDrop
+                      },
+                      sendAt
+                    });
+                  }
 
-                   await sleep(500);
-                 }
-               } else {
+                  await sleep(500);
+                }
+              } else {
                 // Prix identique ou augmenté → mettre à jour silencieusement
                 seenItems.set(item.id, currentPrice);
               }
@@ -310,34 +322,34 @@ async function monitorLoop() {
               continue;
             }
 
-             // Ne pas notifier au premier lancement pour éviter le spam des anciens articles
-             if (!isFirstRun) {
-               newItemsCount++;
-               
-               // 1. Envoi instantané au salon Premium (Webhook spécifique)
-               if (search.webhook && search.webhook !== 'ENTREZ_VOTRE_WEBHOOK_DISCORD_ICI') {
-                 console.log(`[⚡ PREMIUM INSTANTANÉ] Envoi immédiat pour l'article ${item.id} dans #${search.name}`);
-                 await sendDiscordAlert(search.webhook, item, {
-                   ping: search.ping || ''
-                 });
-               }
+            // Ne pas notifier au premier lancement pour éviter le spam des anciens articles
+            if (!isFirstRun) {
+              newItemsCount++;
+              
+              // 1. Envoi instantané au salon Premium (Webhook spécifique)
+              if (search.webhook && search.webhook !== 'ENTREZ_VOTRE_WEBHOOK_DISCORD_ICI') {
+                console.log(`[⚡ PREMIUM INSTANTANÉ] Envoi immédiat pour l'article ${item.id} dans #${search.name}`);
+                await sendDiscordAlert(search.webhook, item, {
+                  ping: search.ping || ''
+                });
+              }
 
-               // 2. Envoi retardé au salon Public (Webhook global #toutes-alertes)
-               if (webhookUrl && webhookUrl !== 'ENTREZ_VOTRE_WEBHOOK_DISCORD_ICI') {
-                 const delayMs = config.freeAlertDelayMs || 180000; // 3 minutes
-                 const sendAt = Date.now() + delayMs;
-                 console.log(`[⏱️ RETARDATEUR] Article ${item.id} mis en file d'attente pour le salon public (envoi dans ${delayMs / 1000}s).`);
-                 delayedAlertsQueue.push({
-                   webhookUrl,
-                   item,
-                   options: { ping: '' }, 
-                   sendAt
-                 });
-               }
-               
-               // Respecter le débit limite de Discord
-               await sleep(500);
-             }
+              // 2. Envoi retardé au salon Public (Webhook global #toutes-alertes)
+              if (webhookUrl && webhookUrl !== 'ENTREZ_VOTRE_WEBHOOK_DISCORD_ICI') {
+                const delayMs = config.freeAlertDelayMs || 180000; // 3 minutes
+                const sendAt = Date.now() + delayMs;
+                console.log(`[⏱️ RETARDATEUR] Article ${item.id} mis en file d'attente pour le salon public (envoi dans ${delayMs / 1000}s).`);
+                delayedAlertsQueue.push({
+                  webhookUrl,
+                  item,
+                  options: { ping: '' }, 
+                  sendAt
+                });
+              }
+              
+              // Respecter le débit limite de Discord
+              await sleep(500);
+            }
           }
 
           if (isFirstRun) {
@@ -484,5 +496,3 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`[SERVER] Serveur Web d'uptime démarré sur le port ${PORT}`);
 });
-
-
