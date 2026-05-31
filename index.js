@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import express from 'express';
 import { execSync } from 'child_process';
-import { Client, GatewayIntentBits, ActivityType } from 'discord.js';
+import { Client, GatewayIntentBits, Partials, ActivityType } from 'discord.js';
 import { fetchVintedItems, fetchSellerProfile } from './src/vintedApi.js';
 import { sendDiscordAlert, SLASH_COMMANDS, handleInteraction, handleMessage } from './src/discord.js';
 
@@ -414,7 +414,13 @@ if (isValidDiscordToken(TOKEN)) {
     intents: [
       GatewayIntentBits.Guilds,
       GatewayIntentBits.GuildMessages,
-      GatewayIntentBits.MessageContent
+      GatewayIntentBits.MessageContent,
+      GatewayIntentBits.DirectMessages
+    ],
+    partials: [
+      Partials.Channel,
+      Partials.Message,
+      Partials.User
     ]
   });
 

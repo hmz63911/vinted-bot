@@ -64,9 +64,9 @@ const client = new Client({
 // ═══════════════════════════════════════════════════
 
 const ROLES = [
-  { name: '👑 Admin', color: '#e74c3c', hoist: true, permissions: [PermissionFlagsBits.Administrator] },
+  { name: '👑 Fondateur', color: '#e74c3c', hoist: true, permissions: [PermissionFlagsBits.Administrator] },
   { name: '👑 Premium', color: '#f1c40f', hoist: true, mentionable: true },
-  { name: '🔔 Alertes Vinted', color: '#00c1b7', hoist: true, mentionable: true },
+  { name: '🔔 Alertes Vinted', color: '#00c1b7', hoist: false, mentionable: true },
   { name: '👟 Nike', color: '#ff6b35', hoist: false, mentionable: true },
   { name: '👟 Adidas', color: '#3498db', hoist: false, mentionable: true },
   { name: '👟 Jordan', color: '#e74c3c', hoist: false, mentionable: true },
@@ -83,7 +83,7 @@ const ROLES = [
   { name: '🌴 Palm Angels', color: '#bdc3c7', hoist: false, mentionable: true },
   { name: '🦖 Arc\'teryx', color: '#34495e', hoist: false, mentionable: true },
   { name: '📉 Baisses de Prix', color: '#2ecc71', hoist: false, mentionable: true },
-  { name: '👤 Membre', color: '#95a5a6', hoist: false },
+  { name: '👤 Membre', color: '#95a5a6', hoist: true },
 ];
 
 const CATEGORIES_AND_CHANNELS = [
@@ -93,6 +93,7 @@ const CATEGORIES_AND_CHANNELS = [
       { name: '📜・règles', type: 'text', readOnly: true },
       { name: '📢・annonces', type: 'text', readOnly: true },
       { name: '🤖・statut-bot', type: 'text', readOnly: true },
+      { name: '🎨・studio-ia', type: 'text', readOnly: true },
       { name: '⭐・avis-membres', type: 'text', readOnly: true },
       { name: '🙋・support', type: 'text', readOnly: true },
     ]
@@ -200,6 +201,32 @@ client.once('ready', async () => {
     }
     console.log('');
 
+    // --- ÉTAPE 2.5 : Ordonner les rôles ---
+    console.log('[2.5/5] 👑 Hiérarchisation des rôles...');
+    const rolePositions = [
+      '👤 Membre',
+      '📉 Baisses de Prix',
+      '🦖 Arc\'teryx', '🌴 Palm Angels', '❄️ Moncler', '🛠️ Carhartt', '🏔️ The North Face',
+      '🎱 Stussy', '⭐ Trapstar', '🧭 Stone Island', '🟥 Supreme', '💀 Corteiz',
+      '🐊 Lacoste', '🐴 Ralph Lauren', '👟 Jordan', '👟 Adidas', '👟 Nike',
+      '👑 Premium',
+      '👑 Fondateur'
+    ];
+
+    let currentPos = 1;
+    for (const roleName of rolePositions) {
+      const role = createdRoles[roleName];
+      if (role && role.editable) {
+        try {
+          await role.setPosition(currentPos);
+          currentPos++;
+        } catch (e) {
+          // Ignorer s'il est au-dessus du bot
+        }
+      }
+    }
+    console.log('   ✅ Hiérarchie des rôles appliquée avec succès.\n');
+
     // --- ÉTAPE 3 : Créer les catégories et salons ---
     console.log('[3/5] 📁 Création des catégories et salons...');
     const createdChannels = {};
@@ -212,9 +239,9 @@ client.once('ready', async () => {
           id: guild.id, // @everyone
           deny: [PermissionFlagsBits.ViewChannel],
         });
-        if (createdRoles['👑 Admin']) {
+        if (createdRoles['👑 Fondateur']) {
           categoryPermissions.push({
-            id: createdRoles['👑 Admin'].id,
+            id: createdRoles['👑 Fondateur'].id,
             allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
           });
         }
@@ -243,9 +270,9 @@ client.once('ready', async () => {
             id: guild.id, // @everyone
             deny: [PermissionFlagsBits.ViewChannel],
           });
-          if (createdRoles['👑 Admin']) {
+          if (createdRoles['👑 Fondateur']) {
             permissionOverwrites.push({
-              id: createdRoles['👑 Admin'].id,
+              id: createdRoles['👑 Fondateur'].id,
               allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
             });
           }
@@ -255,9 +282,9 @@ client.once('ready', async () => {
             id: guild.id, // @everyone
             deny: [PermissionFlagsBits.ViewChannel],
           });
-          if (createdRoles['👑 Admin']) {
+          if (createdRoles['👑 Fondateur']) {
             permissionOverwrites.push({
-              id: createdRoles['👑 Admin'].id,
+              id: createdRoles['👑 Fondateur'].id,
               allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
             });
           }
@@ -269,12 +296,37 @@ client.once('ready', async () => {
             });
           }
         }
+        else if (ch.name === '📜・règles') {
+          permissionOverwrites.push({
+            id: guild.id, // @everyone
+            allow: [PermissionFlagsBits.ViewChannel],
+            deny: [PermissionFlagsBits.SendMessages],
+          });
+        }
         else {
-          if (ch.readOnly) {
+          // Tous les autres salons publics ne sont visibles que par les Membres / Premium / Admins
+          permissionOverwrites.push({
+            id: guild.id, // @everyone
+            deny: [PermissionFlagsBits.ViewChannel],
+          });
+          if (createdRoles['👤 Membre']) {
             permissionOverwrites.push({
-              id: guild.id, // @everyone
-              deny: [PermissionFlagsBits.SendMessages],
+              id: createdRoles['👤 Membre'].id,
               allow: [PermissionFlagsBits.ViewChannel],
+              deny: ch.readOnly ? [PermissionFlagsBits.SendMessages] : [],
+            });
+          }
+          if (createdRoles['👑 Fondateur']) {
+            permissionOverwrites.push({
+              id: createdRoles['👑 Fondateur'].id,
+              allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
+            });
+          }
+          if (createdRoles['👑 Premium']) {
+            permissionOverwrites.push({
+              id: createdRoles['👑 Premium'].id,
+              allow: [PermissionFlagsBits.ViewChannel],
+              deny: ch.readOnly ? [PermissionFlagsBits.SendMessages] : [],
             });
           }
         }
@@ -298,35 +350,42 @@ client.once('ready', async () => {
     const reglesChannel = createdChannels['📜・règles'];
     if (reglesChannel) {
       const reglesEmbed = new EmbedBuilder()
-        .setTitle('📜 Règles du Serveur')
+        .setTitle('📜 BIENVENUE SUR HMZ VINTED SNIPER !')
         .setColor(0x00c1b7)
         .setDescription(
-          '**Bienvenue sur le serveur Vinted Sniper Bot !**\n\n' +
-          'Ce serveur reçoit automatiquement les meilleures offres Vinted en temps réel.\n\n' +
+          '**Le serveur Vinted Sniper Bot est ravi de vous accueillir !** 👋\n\n' +
+          'Notre robot surveille Vinted 24h/24 et 7j/7 pour vous dégoter les meilleures affaires streetwear et luxe en temps réel.\n\n' +
           '━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-          '**1️⃣** • Les salons **🔔 ALERTES VIP** (Nike, Jordan, Corteiz...) sont réservés aux membres Premium.\n\n' +
-          '**2️⃣** • Le salon **🛍️・toutes-alertes** est public mais reçoit les alertes avec **3 minutes de retard**.\n\n' +
-          '**3️⃣** • Cliquez sur **ACHETER EN 1-CLIC** dans les alertes pour accéder directement à la page d\'achat Vinted.\n\n' +
-          '**4️⃣** • Cliquez sur **ENVOYER UN MESSAGE** pour négocier le prix avec le vendeur.\n\n' +
+          '**📜 CONDITIONS ET RÈGLEMENT DU SERVEUR**\n\n' +
+          '**1️⃣** • **Accès Public** : Le salon `#🛍️・toutes-alertes` est gratuit et reçoit les alertes avec **3 minutes de retard**.\n\n' +
+          '**2️⃣** • **Accès Premium VIP** : Les salons thématiques (Nike, Corteiz, Jordan, Supreme, Stone Island...) reçoivent les alertes **instantanément à la seconde près**.\n\n' +
+          '**3️⃣** • **Achat Rapide** : Utilisez le bouton **ACHETER EN 1-CLIC** pour être le premier sur l\'article. Négociez directement via le bouton **ENVOYER UN MESSAGE**.\n\n' +
+          '**4️⃣** • **Respect & Courtoisie** : Aucun spam, insulte ou comportement suspect n\'est toléré.\n\n' +
           '━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-          '🚀 *Débloquez l\'accès Premium pour recevoir toutes les alertes instantanément à la seconde près !*'
+          '👉 Cliquez sur le bouton vert ci-dessous pour **accepter le règlement, obtenir le rôle `👤 Membre`** et débloquer instantanément l\'accès au reste du serveur !'
         )
-        .setFooter({ text: 'Vinted Sniper Bot v2.0 PRO' })
+        .setFooter({ text: 'HMZ Sniper Bot • Accès Officiel' })
         .setTimestamp();
 
-      const payRow = {
+      const reglesRow = {
         type: 1,
         components: [
           {
             type: 2,
+            style: 3, // SUCCESS (VERT)
+            label: '✅ Accepter le règlement et entrer',
+            custom_id: 'btn_accepter_reglement'
+          },
+          {
+            type: 2,
             style: 5, // LINK
-            label: '👑 Obtenir l\'Accès Premium VIP',
+            label: '👑 Devenir VIP - Accès Instantané',
             url: 'https://whop.com/joined/hmz6391/products/bot-vinted-cf/'
           }
         ]
       };
 
-      await reglesChannel.send({ embeds: [reglesEmbed], components: [payRow] });
+      await reglesChannel.send({ embeds: [reglesEmbed], components: [reglesRow] });
       console.log('   ✅ Message envoyé dans #📜・règles');
     }
 
@@ -426,6 +485,87 @@ client.once('ready', async () => {
 
       await supportChannel.send({ embeds: [supportEmbed], components: [supportRow] });
       console.log('   ✅ Message de support envoyé dans #🙋・support');
+    }
+
+    // Message persistant dans #🎨・studio-ia
+    const studioChannel = createdChannels['🎨・studio-ia'];
+    if (studioChannel) {
+      const studioEmbed = new EmbedBuilder()
+        .setTitle('🎨 STUDIO PHOTO IA - STUDIO BLANC')
+        .setDescription(
+          '**Bienvenue dans le Studio IA !** 🚀\n\n' +
+          'Transformez vos photos ordinaires en **photos de studio professionnelles sur fond blanc** ultra-crédibles pour donner confiance à vos acheteurs ! Pour préserver votre vie privée, l\'envoi et la génération se font entièrement en **Messages Privés**.\n\n' +
+          '━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
+          '**👉 COMMENT FAIRE ?**\n' +
+          '1️⃣ • **Cliquez** sur le bouton ci-dessous pour démarrer.\n' +
+          '2️⃣ • **Ouvrez** vos Messages Privés avec le bot.\n' +
+          '3️⃣ • **Envoyez** votre photo dans notre discussion privée sous 60 secondes.\n' +
+          '4️⃣ • **Patientez quelques secondes** et recevez votre photo détourée sur fond blanc professionnel avec son bouton de téléchargement rapide !\n\n' +
+          '━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
+          '🔒 *Par souci de confidentialité, aucune image n\'est traitée ni affichée publiquement !*'
+        )
+        .setColor(0x00c1b7)
+        .setFooter({ text: 'HMZ Sniper IA • Des photos pros en 1 clic' });
+
+      const studioRow = {
+        type: 1,
+        components: [
+          { type: 2, style: 1, label: '⬜ Générer ma Photo Studio Blanc', custom_id: 'btn_studio_blanc' }
+        ]
+      };
+
+      await studioChannel.send({ embeds: [studioEmbed], components: [studioRow] });
+      console.log('   ✅ Message de Studio IA (Studio Blanc) envoyé dans #🎨・studio-ia');
+    }
+
+    // Message de configuration d'administration dans #🔧・config-bot
+    const configBotChannel = createdChannels['🔧・config-bot'];
+    if (configBotChannel) {
+      const adminEmbed = new EmbedBuilder()
+        .setTitle('🔧 TABLEAU DE BORD D\'ADMINISTRATION')
+        .setDescription(
+          'Bienvenue dans votre table de contrôle ! Utilisez les boutons ci-dessous pour gérer entièrement le fonctionnement du bot sniper sans taper une seule commande.\n\n' +
+          '━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
+          '**🔎 GESTION DES RECHERCHES VINTED**\n' +
+          '> • Cliquez sur `📋 Lister` pour afficher vos scans.\n' +
+          '> • Cliquez sur `➕ Ajouter` pour configurer une nouvelle URL Vinted.\n' +
+          '> • Cliquez sur `🗑️ Supprimer` pour retirer un scan actif.\n\n' +
+          '**🛡️ CONFIGURATION DE LA SÉCURITÉ**\n' +
+          '> • Cliquez sur `🔄 Scam On/Off` pour activer/désactiver le filtre anti-arnaques.\n' +
+          '> • Cliquez sur `⚙️ Seuils` pour ajuster les prix max et avis requis.\n' +
+          '> • Cliquez sur `🚫 Mots Exclus` pour modifier la liste noire des titres.'
+        )
+        .setColor(0x2e4053)
+        .setFooter({ text: 'HMZ Sniper System Admin' });
+
+      const adminRow1 = {
+        type: 1,
+        components: [
+          { type: 2, style: 1, label: '📋 Lister Recherches', emoji: { name: '📋' }, custom_id: 'btn_admin_list_searches' },
+          { type: 2, style: 3, label: '➕ Ajouter Recherche', emoji: { name: '➕' }, custom_id: 'btn_admin_add_search' },
+          { type: 2, style: 4, label: '🗑️ Supprimer Recherche', emoji: { name: '🗑️' }, custom_id: 'btn_admin_remove_search' }
+        ]
+      };
+
+      const adminRow2 = {
+        type: 1,
+        components: [
+          { type: 2, style: 2, label: '🔄 Activer/Désactiver Anti-Scam', emoji: { name: '🛡️' }, custom_id: 'btn_admin_toggle_scam' },
+          { type: 2, style: 2, label: '⚙️ Seuils Anti-Scam', emoji: { name: '⚙️' }, custom_id: 'btn_admin_config_scam' },
+          { type: 2, style: 2, label: '🚫 Mots Exclus', emoji: { name: '🚫' }, custom_id: 'btn_admin_edit_excluded' }
+        ]
+      };
+
+      const adminRow3 = {
+        type: 1,
+        components: [
+          { type: 2, style: 1, label: '🎭 Envoyer Panel Auto-Rôles', emoji: { name: '🎭' }, custom_id: 'btn_admin_setup_roles' },
+          { type: 2, style: 2, label: '📊 Statut Complet', emoji: { name: '📊' }, custom_id: 'btn_admin_status' }
+        ]
+      };
+
+      await configBotChannel.send({ embeds: [adminEmbed], components: [adminRow1, adminRow2, adminRow3] });
+      console.log('   ✅ Message de Tableau de Bord Admin envoyé dans #🔧・config-bot');
     }
 
     // Message promotionnel VIP persistant dans #🛍️・toutes-alertes
