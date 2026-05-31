@@ -505,6 +505,42 @@ export async function handleInteraction(interaction, configPath) {
   if (interaction.isButton()) {
     const { customId } = interaction;
     
+    // Bouton d'acceptation du règlement pour donner le rôle Membre
+    if (customId === 'btn_accepter_reglement') {
+      const member = interaction.member;
+      if (!member) return;
+
+      const memberRole = interaction.guild.roles.cache.find(r => r.name === '👤 Membre');
+
+      if (!memberRole) {
+        return interaction.reply({
+          content: '❌ **Erreur** : Le rôle `👤 Membre` est introuvable sur ce serveur. Veuillez contacter un administrateur.',
+          ephemeral: true
+        });
+      }
+
+      if (member.roles.cache.has(memberRole.id)) {
+        return interaction.reply({
+          content: 'ℹ️ **Info** : Vous avez déjà accepté le règlement et possédez le rôle `👤 Membre` ! Vous pouvez déjà voir tous les salons.',
+          ephemeral: true
+        });
+      }
+
+      try {
+        await member.roles.add(memberRole);
+        return interaction.reply({
+          content: '✅ **Règlement accepté !** Bienvenue sur le serveur. Le rôle `👤 Membre` vous a été attribué et tous les salons publics vous sont désormais ouverts ! 🎉',
+          ephemeral: true
+        });
+      } catch (err) {
+        console.error('[DISCORD] Impossible d\'attribuer le rôle Membre :', err.message);
+        return interaction.reply({
+          content: `❌ **Erreur** : Impossible de vous attribuer le rôle : ${err.message}. Veuillez vérifier que le rôle du Bot est au-dessus du rôle \`👤 Membre\` dans les paramètres du serveur.`,
+          ephemeral: true
+        });
+      }
+    }
+
     // Déclencheur du bouton pour laisser un avis
     if (customId === 'btn_laisser_avis') {
       const modal = new ModalBuilder()
