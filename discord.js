@@ -90,7 +90,7 @@ function buildVintedActionUrls(item) {
  * @returns {string} Chaîne d'étoiles (ex: ⭐⭐⭐⭐⭐)
  */
 function getRatingStars(rating) {
-  if (!rating) return 'Pas d\'évaluations';
+  if (!rating) return '';
   
   // Si le rating est sous forme de pourcentage (entre 0 et 1)
   let scoreOutOfFive = rating;
@@ -148,6 +148,7 @@ export async function sendDiscordAlert(webhookUrl, item, options = {}) {
 
     const brand = item.brand_title || 'Sans marque';
     const size = item.size_title || 'N/A';
+    const condition = item.status || item.status_title || 'Non spécifié';
     const title = item.title || 'Sans titre';
     
     // Infos vendeur
@@ -175,7 +176,7 @@ export async function sendDiscordAlert(webhookUrl, item, options = {}) {
     // Construire les champs de l'embed
     const fields = [];
 
-    // Champ prix (avec ancien prix barré pour les baisses)
+    // 1. Champ Prix
     if (isPriceDrop) {
       fields.push({
         name: '💰 Prix',
@@ -185,25 +186,42 @@ export async function sendDiscordAlert(webhookUrl, item, options = {}) {
     } else {
       fields.push({
         name: '💰 Prix',
-        value: totalPrice.raw ? `**${price.amount}**\n*(Total : ${totalPrice.amount})*` : `**${price.amount}**`,
+        value: `**${price.amount}**`,
         inline: true
       });
     }
 
-    fields.push(
-      { name: '🏷️ Marque', value: brand, inline: true },
-      { name: '📐 Taille', value: size, inline: true },
-      {
-        name: '👤 Vendeur',
-        value: `${sellerName} ${sellerFeedback}\n${sellerStars}`,
-        inline: false
-      },
-      {
-        name: '⚡ Actions',
-        value: 'Utilisez les **boutons** sous ce message pour acheter ou négocier.',
-        inline: false
+    // 2. Champ Marque
+    fields.push({
+      name: '🏷️ Marque',
+      value: brand,
+      inline: true
+    });
+
+    // 3. Champ Taille et État combinés
+    fields.push({
+      name: '📐 Taille • ✨ État',
+      value: `${size} • ${condition}`,
+      inline: true
+    });
+
+    // 4. Champ Vendeur épuré sur une seule ligne
+    let sellerFeedbackText = '';
+    if (item.user?.feedback_count) {
+      if (sellerStars) {
+        sellerFeedbackText = `(${sellerStars} • ${item.user.feedback_count} avis)`;
+      } else {
+        sellerFeedbackText = `(${item.user.feedback_count} avis)`;
       }
-    );
+    } else {
+      sellerFeedbackText = `(Aucun avis)`;
+    }
+
+    fields.push({
+      name: '👤 Vendeur',
+      value: `**${sellerName}** ${sellerFeedbackText}`,
+      inline: false
+    });
 
     const embed = {
       title: embedTitle,
