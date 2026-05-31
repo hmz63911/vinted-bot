@@ -148,6 +148,7 @@ export async function sendDiscordAlert(webhookUrl, item, options = {}) {
 
     const brand = item.brand_title || 'Sans marque';
     const size = item.size_title || 'N/A';
+    const condition = item.status || item.status_title || 'Non spécifié';
     const title = item.title || 'Sans titre';
     
     // Infos vendeur
@@ -175,7 +176,7 @@ export async function sendDiscordAlert(webhookUrl, item, options = {}) {
     // Construire les champs de l'embed
     const fields = [];
 
-    // Champ prix (avec ancien prix barré pour les baisses)
+    // 1. Champ Prix
     if (isPriceDrop) {
       fields.push({
         name: '💰 Prix',
@@ -185,25 +186,35 @@ export async function sendDiscordAlert(webhookUrl, item, options = {}) {
     } else {
       fields.push({
         name: '💰 Prix',
-        value: totalPrice.raw ? `**${price.amount}**\n*(Total : ${totalPrice.amount})*` : `**${price.amount}**`,
+        value: `**${price.amount}**`,
         inline: true
       });
     }
 
-    fields.push(
-      { name: '🏷️ Marque', value: brand, inline: true },
-      { name: '📐 Taille', value: size, inline: true },
-      {
-        name: '👤 Vendeur',
-        value: `${sellerName} ${sellerFeedback}\n${sellerStars}`,
-        inline: false
-      },
-      {
-        name: '⚡ Actions',
-        value: 'Utilisez les **boutons** sous ce message pour acheter ou négocier.',
-        inline: false
-      }
-    );
+    // 2. Champ Marque
+    fields.push({
+      name: '🏷️ Marque',
+      value: brand,
+      inline: true
+    });
+
+    // 3. Champ Taille et État combinés
+    fields.push({
+      name: '📐 Taille • ✨ État',
+      value: `${size} • ${condition}`,
+      inline: true
+    });
+
+    // 4. Champ Vendeur épuré sur une seule ligne
+    const sellerFeedbackText = item.user?.feedback_count 
+      ? `(${sellerStars} • ${item.user.feedback_count} avis)`
+      : `(Aucun avis)`;
+
+    fields.push({
+      name: '👤 Vendeur',
+      value: `**${sellerName}** ${sellerFeedbackText}`,
+      inline: false
+    });
 
     const embed = {
       title: embedTitle,
@@ -505,6 +516,42 @@ export async function handleInteraction(interaction, configPath) {
   if (interaction.isButton()) {
     const { customId } = interaction;
     
+    // Bouton d'acceptation du règlement pour donner le rôle Membre
+    if (customId === 'btn_accepter_reglement') {
+      const member = interaction.member;
+      if (!member) return;
+
+      const memberRole = interaction.guild.roles.cache.find(r => r.name === '👤 Membre');
+
+      if (!memberRole) {
+        return interaction.reply({
+          content: '❌ **Erreur** : Le rôle `👤 Membre` est introuvable sur ce serveur. Veuillez contacter un administrateur.',
+          ephemeral: true
+        });
+      }
+
+      if (member.roles.cache.has(memberRole.id)) {
+        return interaction.reply({
+          content: 'ℹ️ **Info** : Vous avez déjà accepté le règlement et possédez le rôle `👤 Membre` ! Vous pouvez déjà voir tous les salons.',
+          ephemeral: true
+        });
+      }
+
+      try {
+        await member.roles.add(memberRole);
+        return interaction.reply({
+          content: '✅ **Règlement accepté !** Bienvenue sur le serveur. Le rôle `👤 Membre` vous a été attribué et tous les salons publics vous sont désormais ouverts ! 🎉',
+          ephemeral: true
+        });
+      } catch (err) {
+        console.error('[DISCORD] Impossible d\'attribuer le rôle Membre :', err.message);
+        return interaction.reply({
+          content: `❌ **Erreur** : Impossible de vous attribuer le rôle : ${err.message}. Veuillez vérifier que le rôle du Bot est au-dessus du rôle \`👤 Membre\` dans les paramètres du serveur.`,
+          ephemeral: true
+        });
+      }
+    }
+
     // Déclencheur du bouton pour laisser un avis
     if (customId === 'btn_laisser_avis') {
       const modal = new ModalBuilder()
