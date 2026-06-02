@@ -2,7 +2,7 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import { Jimp } from 'jimp';
-import { EmbedBuilder, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } from 'discord.js';
+import { EmbedBuilder, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ChannelType, ButtonBuilder, ButtonStyle } from 'discord.js';
 
 const VINTED_DOMAIN = 'https://www.vinted.fr';
 
@@ -246,24 +246,6 @@ export async function sendDiscordAlert(webhookUrl, item, options = {}) {
             {
               type: 2,
               style: 5,
-              label: 'Acheter en 1-clic',
-              url: buyUrl
-            },
-            {
-              type: 2,
-              style: 5,
-              label: 'Négocier',
-              url: offerUrl
-            },
-            {
-              type: 2,
-              style: 5,
-              label: 'Message vendeur',
-              url: messageUrl
-            },
-            {
-              type: 2,
-              style: 5,
               label: 'Voir l\'annonce',
               url: itemUrl
             }
@@ -352,6 +334,10 @@ function saveTickets(configPath, tickets) {
 // ═══════════════════════════════════════════════════
 
 export const SLASH_COMMANDS = [
+  {
+    name: 'close',
+    description: '🔒 Ferme le ticket actuel et supprime le salon'
+  },
   {
     name: 'status',
     description: 'Affiche le statut actuel du sniper Vinted et du serveur'
@@ -451,6 +437,106 @@ export const SLASH_COMMANDS = [
     ]
   }
 ];
+
+export async function cleanupDuplicateCategories(guild, configPath) {
+  try {
+    const channels = await guild.channels.fetch();
+    const tickets = getTickets(configPath);
+    
+    // 1. Nettoyer les catégories doublons
+    const categories = channels.filter(c => 
+      c.type === ChannelType.GuildCategory && 
+      (c.name === '🎫 TICKETS' || c.name.toLowerCase().includes('tickets'))
+    );
+
+    let mainCategory = null;
+    if (categories.size > 0) {
+      const sorted = [...categories.values()].sort((a, b) => a.id.localeCompare(b.id));
+      mainCategory = sorted[0];
+      
+      if (categories.size > 1) {
+        console.log(`[DISCORD] Détection de ${categories.size} catégories de tickets en doublon. Nettoyage...`);
+        for (let i = 1; i < sorted.length; i++) {
+          const duplicateCat = sorted[i];
+          const children = channels.filter(c => c.parentId === duplicateCat.id);
+          for (const [, child] of children) {
+            try {
+              await child.setParent(mainCategory.id);
+              console.log(`[DISCORD] Déplacement du salon #${child.name} vers la catégorie principale.`);
+            } catch (err) {
+              console.error(`[DISCORD] Échec du déplacement de #${child.name}:`, err.message);
+            }
+          }
+          try {
+            await duplicateCat.delete();
+            console.log(`[DISCORD] Catégorie doublon ${duplicateCat.name} supprimée.`);
+          } catch (err) {
+            console.error(`[DISCORD] Échec de la suppression de la catégorie doublon:`, err.message);
+          }
+        }
+      }
+    }
+
+    // 2. Nettoyer les salons ticket-xxx orphelins (non actifs et plus de 12 heures)
+    const ticketChannels = channels.filter(c => c.type === ChannelType.GuildText && c.name.startsWith('ticket-'));
+    const now = Date.now();
+    const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+
+    for (const [, ch] of ticketChannels) {
+      const isActive = tickets.some(t => t.channelId === ch.id);
+      if (!isActive) {
+        const createdAt = (Number(BigInt(ch.id) >> 22n) + 1420070400000);
+        if (now - createdAt > TWELVE_HOURS) {
+          try {
+            await ch.delete();
+            console.log(`[DISCORD] Salon ticket orphelin #${ch.name} supprimé automatiquement.`);
+          } catch (err) {
+            console.error(`[DISCORD] Échec de la suppression de #${ch.name}:`, err.message);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[DISCORD] Erreur lors du nettoyage du système de tickets:', err.message);
+  }
+}
+
+let ticketsCategoryPromise = null;
+
+async function getOrCreateTicketsCategory(guild, channels) {
+  // 1. Chercher dans les salons existants
+  let category = channels.find(c => 
+    c.type === ChannelType.GuildCategory && 
+    (c.name === '🎫 TICKETS' || c.name.toLowerCase().includes('tickets'))
+  );
+  if (category) return category;
+
+  // 2. Si déjà en cours de création, attendre la fin
+  if (ticketsCategoryPromise) {
+    return await ticketsCategoryPromise;
+  }
+
+  // 3. Sinon, créer la catégorie et stocker la promesse
+  ticketsCategoryPromise = (async () => {
+    try {
+      const cat = await guild.channels.create({
+        name: '🎫 TICKETS',
+        type: ChannelType.GuildCategory,
+        permissionOverwrites: [
+          {
+            id: guild.id,
+            deny: [PermissionFlagsBits.ViewChannel]
+          }
+        ]
+      });
+      return cat;
+    } finally {
+      ticketsCategoryPromise = null;
+    }
+  })();
+
+  return await ticketsCategoryPromise;
+}
 
 /**
  * Traite les interactions de commandes Slash et de boutons.
@@ -808,44 +894,49 @@ export async function handleInteraction(interaction, configPath) {
       const user = interaction.user;
       if (!guild) return;
 
-      const tickets = getTickets(configPath);
+      // Récupérer la liste fraîche des salons directement depuis Discord (évite les doublons dus au cache)
+      let channels;
+      try {
+        channels = await guild.channels.fetch();
+      } catch (e) {
+        channels = guild.channels.cache;
+      }
 
-      const existingTicket = tickets.find(t => t.userId === user.id);
-      if (existingTicket) {
-        const channel = guild.channels.cache.get(existingTicket.channelId);
-        if (channel) {
-          return interaction.reply({
-            content: `❌ Vous avez déjà un ticket ouvert dans ${channel} !`,
-            ephemeral: true
-          });
+      const tickets = getTickets(configPath);
+      const cleanUsername = user.username.toLowerCase().slice(0, 15);
+      
+      // Chercher si le salon de ticket existe déjà physiquement
+      const existingChannel = channels.find(c => c.name === `ticket-${cleanUsername}` && c.type === ChannelType.GuildText);
+      if (existingChannel) {
+        try {
+          await existingChannel.delete();
+          console.log(`[DISCORD] Ancien salon ticket #${existingChannel.name} supprimé pour faire place à un nouveau.`);
+          
+          // Retirer également de tickets.json si présent
+          const oldIdx = tickets.findIndex(t => t.channelId === existingChannel.id);
+          if (oldIdx !== -1) {
+            tickets.splice(oldIdx, 1);
+          }
+        } catch (err) {
+          console.warn(`[DISCORD] Impossible de supprimer l'ancien salon ticket #${existingChannel.name} :`, err.message);
         }
       }
 
-      let ticketsCategory = guild.channels.cache.find(c => c.name === '🎫 TICKETS' && c.type === 4);
-      if (!ticketsCategory) {
-        try {
-          ticketsCategory = await guild.channels.create({
-            name: '🎫 TICKETS',
-            type: 4,
-            permissionOverwrites: [
-              {
-                id: guild.id,
-                deny: [PermissionFlagsBits.ViewChannel]
-              }
-            ]
-          });
-        } catch (err) {
-          return interaction.reply({
-            content: `❌ Impossible de créer la catégorie des tickets : ${err.message}`,
-            ephemeral: true
-          });
-        }
+      // Récupérer ou créer la catégorie de tickets de façon sécurisée (anti-doublon)
+      let ticketsCategory;
+      try {
+        ticketsCategory = await getOrCreateTicketsCategory(guild, channels);
+      } catch (err) {
+        return interaction.reply({
+          content: `❌ Impossible de créer la catégorie des tickets : ${err.message}`,
+          ephemeral: true
+        });
       }
 
       try {
         const ticketChannel = await guild.channels.create({
           name: `ticket-${user.username.slice(0, 15)}`,
-          type: 0,
+          type: ChannelType.GuildText,
           parent: ticketsCategory.id,
           permissionOverwrites: [
             {
@@ -893,25 +984,36 @@ export async function handleInteraction(interaction, configPath) {
           .setColor(0x00c1b7)
           .setFooter({ text: 'HMZ Sniper Support • Chatbot Actif' });
 
-        const ticketRow = {
-          type: 1,
-          components: [
-            {
-              type: 2,
-              style: 3,
-              label: '🙋 Parler à un Humain',
-              custom_id: 'btn_parler_humain'
-            },
-            {
-              type: 2,
-              style: 4,
-              label: '🔒 Fermer le Ticket',
-              custom_id: 'btn_fermer_ticket'
-            }
-          ]
-        };
+        const ticketRow = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId('btn_parler_humain')
+            .setLabel('🙋 Parler à un Humain')
+            .setStyle(ButtonStyle.Success),
+          new ButtonBuilder()
+            .setCustomId('btn_fermer_ticket')
+            .setLabel('🔒 Fermer le Ticket')
+            .setStyle(ButtonStyle.Danger)
+        );
 
-        await ticketChannel.send({ content: `${user}`, embeds: [welcomeEmbed], components: [ticketRow] });
+        // Essayer d'envoyer le message de bienvenue avec retry (gère la latence de propagation des permissions Discord)
+        let sentWelcome = false;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            await ticketChannel.send({ content: `${user}`, embeds: [welcomeEmbed], components: [ticketRow] });
+            sentWelcome = true;
+            break;
+          } catch (sendErr) {
+            console.warn(`[DISCORD] Tentative ${attempt}/3 d'envoi du message de bienvenue échouée dans #${ticketChannel.name}:`, sendErr.message);
+            if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+
+        if (!sentWelcome) {
+          // Fallback : si l'envoi échoue toujours, on tente d'envoyer un texte simple pour informer l'utilisateur
+          try {
+            await ticketChannel.send({ content: `Bonjour ${user} ! Bienvenue dans votre ticket d'assistance. Utilisez la commande \`/close\` si vous souhaitez fermer ce salon.` });
+          } catch (_) {}
+        }
 
         return interaction.reply({
           content: `✅ Votre ticket a été créé avec succès dans ${ticketChannel} !`,
@@ -956,17 +1058,12 @@ export async function handleInteraction(interaction, configPath) {
         .setColor(0xe67e22)
         .setTimestamp();
 
-      const closeRow = {
-        type: 1,
-        components: [
-          {
-            type: 2,
-            style: 4,
-            label: '🔒 Fermer le Ticket',
-            custom_id: 'btn_fermer_ticket'
-          }
-        ]
-      };
+      const closeRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('btn_fermer_ticket')
+          .setLabel('🔒 Fermer le Ticket')
+          .setStyle(ButtonStyle.Danger)
+      );
 
       await interaction.reply({ embeds: [humanEmbed], components: [closeRow] });
 
@@ -992,16 +1089,28 @@ export async function handleInteraction(interaction, configPath) {
       const tickets = getTickets(configPath);
       const ticketIdx = tickets.findIndex(t => t.channelId === interaction.channelId);
 
-      if (ticketIdx === -1) {
+      const isTicketChannel = interaction.channel.name && interaction.channel.name.startsWith('ticket-');
+      const isAdmin = interaction.member.permissions.has(PermissionFlagsBits.Administrator);
+
+      if (ticketIdx === -1 && !isTicketChannel) {
         return interaction.reply({
           content: '❌ Ce salon n\'est pas un ticket actif enregistré.',
           ephemeral: true
         });
       }
 
-      const ticket = tickets[ticketIdx];
-      const isCreator = ticket.userId === interaction.user.id;
-      const isAdmin = interaction.member.permissions.has(PermissionFlagsBits.Administrator);
+      let isCreator = false;
+      if (ticketIdx !== -1) {
+        const ticket = tickets[ticketIdx];
+        isCreator = ticket.userId === interaction.user.id;
+        tickets.splice(ticketIdx, 1);
+        saveTickets(configPath, tickets);
+      } else {
+        // Fallback si non enregistré dans tickets.json mais s'appelle ticket-xxx
+        const usernamePart = interaction.channel.name.replace('ticket-', '').toLowerCase();
+        isCreator = interaction.user.username.toLowerCase().startsWith(usernamePart) || 
+                    usernamePart.startsWith(interaction.user.username.toLowerCase().slice(0, 10));
+      }
 
       if (!isCreator && !isAdmin) {
         return interaction.reply({
@@ -1010,9 +1119,14 @@ export async function handleInteraction(interaction, configPath) {
         });
       }
 
-      // Supprimer le ticket de la liste
-      tickets.splice(ticketIdx, 1);
-      saveTickets(configPath, tickets);
+      // Supprimer le ticket de la liste si trouvé tardivement (sécurité supplémentaire)
+      if (ticketIdx !== -1) {
+        const checkIndex = tickets.findIndex(t => t.channelId === interaction.channelId);
+        if (checkIndex !== -1) {
+          tickets.splice(checkIndex, 1);
+          saveTickets(configPath, tickets);
+        }
+      }
 
       await interaction.reply({
         content: '🔒 **Ticket Fermé**\nCe salon sera supprimé automatiquement dans **5 secondes**...'
@@ -1259,7 +1373,7 @@ export async function handleInteraction(interaction, configPath) {
           { type: 2, style: 2, label: 'Nike', emoji: { name: '👟' }, custom_id: 'role_Nike' },
           { type: 2, style: 2, label: 'Adidas', emoji: { name: '👟' }, custom_id: 'role_Adidas' },
           { type: 2, style: 2, label: 'Jordan', emoji: { name: '👟' }, custom_id: 'role_Jordan' },
-          { type: 2, style: 2, label: 'Corteiz', emoji: { name: '💀' }, custom_id: 'role_Corteiz' },
+          { type: 2, style: 2, label: 'New Balance', emoji: { name: '👟' }, custom_id: 'role_New Balance' },
           { type: 2, style: 2, label: 'Supreme', emoji: { name: '🟥' }, custom_id: 'role_Supreme' }
         ]
       };
@@ -1267,10 +1381,11 @@ export async function handleInteraction(interaction, configPath) {
       const row2 = {
         type: 1,
         components: [
+          { type: 2, style: 2, label: 'Corteiz', emoji: { name: '💀' }, custom_id: 'role_Corteiz' },
           { type: 2, style: 2, label: 'Trapstar', emoji: { name: '⭐' }, custom_id: 'role_Trapstar' },
           { type: 2, style: 2, label: 'Stussy', emoji: { name: '🎱' }, custom_id: 'role_Stussy' },
           { type: 2, style: 2, label: 'Carhartt', emoji: { name: '🛠️' }, custom_id: 'role_Carhartt' },
-          { type: 2, style: 2, label: 'Stone Island', emoji: { name: '🧭' }, custom_id: 'role_Stone Island' }
+          { type: 2, style: 2, label: 'Oakley', emoji: { name: '🕶️' }, custom_id: 'role_Oakley' }
         ]
       };
 
@@ -1279,13 +1394,23 @@ export async function handleInteraction(interaction, configPath) {
         components: [
           { type: 2, style: 2, label: 'Ralph Lauren', emoji: { name: '🐴' }, custom_id: 'role_Ralph Lauren' },
           { type: 2, style: 2, label: 'Lacoste', emoji: { name: '🐊' }, custom_id: 'role_Lacoste' },
+          { type: 2, style: 2, label: 'Diesel', emoji: { name: '👖' }, custom_id: 'role_Diesel' },
+          { type: 2, style: 2, label: 'Stone Island', emoji: { name: '🧭' }, custom_id: 'role_Stone Island' }
+        ]
+      };
+
+      const row4 = {
+        type: 1,
+        components: [
+          { type: 2, style: 2, label: 'The North Face', emoji: { name: '🏔️' }, custom_id: 'role_The North Face' },
+          { type: 2, style: 2, label: 'Patagonia', emoji: { name: '🌲' }, custom_id: 'role_Patagonia' },
           { type: 2, style: 2, label: 'Moncler', emoji: { name: '❄️' }, custom_id: 'role_Moncler' },
           { type: 2, style: 2, label: 'Palm Angels', emoji: { name: '🌴' }, custom_id: 'role_Palm Angels' },
           { type: 2, style: 2, label: 'Arc\'teryx', emoji: { name: '🦖' }, custom_id: 'role_Arcteryx' }
         ]
       };
 
-      const row4 = {
+      const row5 = {
         type: 1,
         components: [
           { type: 2, style: 3, label: 'Baisses de Prix', emoji: { name: '📉' }, custom_id: 'role_Baisses de Prix' },
@@ -1294,7 +1419,7 @@ export async function handleInteraction(interaction, configPath) {
       };
 
       try {
-        await interaction.channel.send({ embeds: [embed], components: [row1, row2, row3, row4] });
+        await interaction.channel.send({ embeds: [embed], components: [row1, row2, row3, row4, row5] });
         return interaction.reply({ content: '✅ Le panneau d\'auto-rôles interactif a été envoyé !', ephemeral: true });
       } catch (err) {
         return interaction.reply({ content: `❌ Impossible d'envoyer le message : ${err.message}`, ephemeral: true });
@@ -1532,6 +1657,59 @@ export async function handleInteraction(interaction, configPath) {
   if (!interaction.isChatInputCommand()) return;
 
   const { commandName } = interaction;
+
+  if (commandName === 'close') {
+    const tickets = getTickets(configPath);
+    const ticketIdx = tickets.findIndex(t => t.channelId === interaction.channel.id);
+
+    const isTicketChannel = interaction.channel.name && interaction.channel.name.startsWith('ticket-');
+    const isAdmin = interaction.member.permissions.has(PermissionFlagsBits.Administrator) || 
+                    interaction.member.permissions.has(PermissionFlagsBits.ManageChannels);
+
+    if (ticketIdx === -1 && !isTicketChannel) {
+      return interaction.reply({
+        content: '❌ Ce salon n\'est pas un ticket actif.',
+        ephemeral: true
+      });
+    }
+
+    let isCreator = false;
+    if (ticketIdx !== -1) {
+      const ticket = tickets[ticketIdx];
+      isCreator = ticket.userId === interaction.user.id;
+    } else {
+      const usernamePart = interaction.channel.name.replace('ticket-', '').toLowerCase();
+      isCreator = interaction.user.username.toLowerCase().startsWith(usernamePart) || 
+                  usernamePart.startsWith(interaction.user.username.toLowerCase().slice(0, 10));
+    }
+
+    if (!isCreator && !isAdmin) {
+      return interaction.reply({
+        content: '❌ Seul l\'administrateur, un modérateur ou le créateur du ticket peut le fermer.',
+        ephemeral: true
+      });
+    }
+
+    // Supprimer de la liste
+    if (ticketIdx !== -1) {
+      tickets.splice(ticketIdx, 1);
+      saveTickets(configPath, tickets);
+    }
+
+    await interaction.reply({
+      content: '🔒 **Ticket Fermé**\nCe salon sera supprimé automatiquement dans **5 secondes**...'
+    });
+
+    setTimeout(async () => {
+      try {
+        await interaction.channel.delete();
+      } catch (err) {
+        console.error('[DISCORD] Impossible de supprimer le salon du ticket via commande :', err.message);
+      }
+    }, 5000);
+
+    return;
+  }
 
   if (commandName === 'status') {
     const uptimeSeconds = Math.floor(process.uptime());
@@ -1822,7 +2000,7 @@ export async function handleInteraction(interaction, configPath) {
         { type: 2, style: 2, label: 'Nike', emoji: { name: '👟' }, custom_id: 'role_Nike' },
         { type: 2, style: 2, label: 'Adidas', emoji: { name: '👟' }, custom_id: 'role_Adidas' },
         { type: 2, style: 2, label: 'Jordan', emoji: { name: '👟' }, custom_id: 'role_Jordan' },
-        { type: 2, style: 2, label: 'Corteiz', emoji: { name: '💀' }, custom_id: 'role_Corteiz' },
+        { type: 2, style: 2, label: 'New Balance', emoji: { name: '👟' }, custom_id: 'role_New Balance' },
         { type: 2, style: 2, label: 'Supreme', emoji: { name: '🟥' }, custom_id: 'role_Supreme' }
       ]
     };
@@ -1831,10 +2009,11 @@ export async function handleInteraction(interaction, configPath) {
     const row2 = {
       type: 1,
       components: [
+        { type: 2, style: 2, label: 'Corteiz', emoji: { name: '💀' }, custom_id: 'role_Corteiz' },
         { type: 2, style: 2, label: 'Trapstar', emoji: { name: '⭐' }, custom_id: 'role_Trapstar' },
         { type: 2, style: 2, label: 'Stussy', emoji: { name: '🎱' }, custom_id: 'role_Stussy' },
         { type: 2, style: 2, label: 'Carhartt', emoji: { name: '🛠️' }, custom_id: 'role_Carhartt' },
-        { type: 2, style: 2, label: 'Stone Island', emoji: { name: '🧭' }, custom_id: 'role_Stone Island' }
+        { type: 2, style: 2, label: 'Oakley', emoji: { name: '🕶️' }, custom_id: 'role_Oakley' }
       ]
     };
 
@@ -1844,6 +2023,17 @@ export async function handleInteraction(interaction, configPath) {
       components: [
         { type: 2, style: 2, label: 'Ralph Lauren', emoji: { name: '🐴' }, custom_id: 'role_Ralph Lauren' },
         { type: 2, style: 2, label: 'Lacoste', emoji: { name: '🐊' }, custom_id: 'role_Lacoste' },
+        { type: 2, style: 2, label: 'Diesel', emoji: { name: '👖' }, custom_id: 'role_Diesel' },
+        { type: 2, style: 2, label: 'Stone Island', emoji: { name: '🧭' }, custom_id: 'role_Stone Island' }
+      ]
+    };
+
+    // Boutons de rôles Luxe / Outdoor
+    const row4 = {
+      type: 1,
+      components: [
+        { type: 2, style: 2, label: 'The North Face', emoji: { name: '🏔️' }, custom_id: 'role_The North Face' },
+        { type: 2, style: 2, label: 'Patagonia', emoji: { name: '🌲' }, custom_id: 'role_Patagonia' },
         { type: 2, style: 2, label: 'Moncler', emoji: { name: '❄️' }, custom_id: 'role_Moncler' },
         { type: 2, style: 2, label: 'Palm Angels', emoji: { name: '🌴' }, custom_id: 'role_Palm Angels' },
         { type: 2, style: 2, label: 'Arc\'teryx', emoji: { name: '🦖' }, custom_id: 'role_Arcteryx' }
@@ -1851,7 +2041,7 @@ export async function handleInteraction(interaction, configPath) {
     };
 
     // Autres pings
-    const row4 = {
+    const row5 = {
       type: 1,
       components: [
         { type: 2, style: 3, label: 'Baisses de Prix', emoji: { name: '📉' }, custom_id: 'role_Baisses de Prix' },
@@ -1860,7 +2050,7 @@ export async function handleInteraction(interaction, configPath) {
     };
 
     try {
-      await interaction.channel.send({ embeds: [embed], components: [row1, row2, row3, row4] });
+      await interaction.channel.send({ embeds: [embed], components: [row1, row2, row3, row4, row5] });
       return interaction.reply({ content: '✅ Le panneau d\'auto-rôles interactif a été envoyé avec succès dans ce salon !', ephemeral: true });
     } catch (err) {
       return interaction.reply({ content: `❌ Impossible d'envoyer le message : ${err.message}`, ephemeral: true });
@@ -2000,8 +2190,35 @@ export async function handleInteraction(interaction, configPath) {
 export async function handleMessage(message, configPath) {
   if (message.author.bot) return;
 
-  const tickets = getTickets(configPath);
-  const ticket = tickets.find(t => t.channelId === message.channel.id);
+  let tickets = getTickets(configPath);
+  let ticket = tickets.find(t => t.channelId === message.channel.id);
+
+  // Auto-récupération auto-guérissante si le salon s'appelle ticket-xxx mais n'est pas dans tickets.json
+  if (!ticket && message.channel.name && message.channel.name.startsWith('ticket-')) {
+    let userId = null;
+    let username = message.channel.name.replace('ticket-', '');
+    
+    // Essayer de trouver le créateur du ticket (en lisant les permission overwrites)
+    if (message.channel.permissionOverwrites) {
+      const memberOverwrites = message.channel.permissionOverwrites.cache.filter(
+        o => o.type === 1 && o.id !== message.client.user.id
+      ); // type 1 is Member
+      if (memberOverwrites.size > 0) {
+        userId = memberOverwrites.first().id;
+      }
+    }
+    
+    ticket = {
+      channelId: message.channel.id,
+      userId: userId || message.author.id,
+      username: username,
+      mode: 'bot',
+      timestamp: new Date().toISOString()
+    };
+    tickets.push(ticket);
+    saveTickets(configPath, tickets);
+    console.log(`[DISCORD] Auto-restauration du ticket pour le salon ${message.channel.name} dans tickets.json`);
+  }
 
   if (!ticket) return;
   if (ticket.mode === 'human') return;
@@ -2041,8 +2258,19 @@ export async function handleMessage(message, configPath) {
     .setFooter({ text: 'HMZ Support • Assistant Virtuel' })
     .setTimestamp();
 
+  const ticketRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('btn_parler_humain')
+      .setLabel('🙋 Parler à un Humain')
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId('btn_fermer_ticket')
+      .setLabel('🔒 Fermer le Ticket')
+      .setStyle(ButtonStyle.Danger)
+  );
+
   try {
-    await message.reply({ embeds: [embed] });
+    await message.reply({ embeds: [embed], components: [ticketRow] });
   } catch (err) {
     console.error('[DISCORD] Impossible d\'envoyer la réponse du chatbot:', err.message);
   }

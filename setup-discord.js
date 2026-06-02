@@ -70,15 +70,19 @@ const ROLES = [
   { name: '👟 Nike', color: '#ff6b35', hoist: false, mentionable: true },
   { name: '👟 Adidas', color: '#3498db', hoist: false, mentionable: true },
   { name: '👟 Jordan', color: '#e74c3c', hoist: false, mentionable: true },
+  { name: '👟 New Balance', color: '#95a5a6', hoist: false, mentionable: true },
   { name: '🐴 Ralph Lauren', color: '#1a3c6e', hoist: false, mentionable: true },
   { name: '🐊 Lacoste', color: '#27ae60', hoist: false, mentionable: true },
+  { name: '👖 Diesel', color: '#2980b9', hoist: false, mentionable: true },
   { name: '💀 Corteiz', color: '#2c3e50', hoist: false, mentionable: true },
   { name: '🟥 Supreme', color: '#e74c3c', hoist: false, mentionable: true },
   { name: '🧭 Stone Island', color: '#f1c40f', hoist: false, mentionable: true },
   { name: '⭐ Trapstar', color: '#9b59b6', hoist: false, mentionable: true },
   { name: '🎱 Stussy', color: '#1abc9c', hoist: false, mentionable: true },
   { name: '🏔️ The North Face', color: '#e67e22', hoist: false, mentionable: true },
+  { name: '🌲 Patagonia', color: '#27ae60', hoist: false, mentionable: true },
   { name: '🛠️ Carhartt', color: '#d35400', hoist: false, mentionable: true },
+  { name: '🕶️ Oakley', color: '#7f8c8d', hoist: false, mentionable: true },
   { name: '❄️ Moncler', color: '#95a5a6', hoist: false, mentionable: true },
   { name: '🌴 Palm Angels', color: '#bdc3c7', hoist: false, mentionable: true },
   { name: '🦖 Arc\'teryx', color: '#34495e', hoist: false, mentionable: true },
@@ -92,6 +96,7 @@ const CATEGORIES_AND_CHANNELS = [
     channels: [
       { name: '📜・règles', type: 'text', readOnly: true },
       { name: '📢・annonces', type: 'text', readOnly: true },
+      { name: '🆕・mises-à-jour', type: 'text', readOnly: true },
       { name: '🤖・statut-bot', type: 'text', readOnly: true },
       { name: '🎨・studio-ia', type: 'text', readOnly: true },
       { name: '⭐・avis-membres', type: 'text', readOnly: true },
@@ -105,11 +110,13 @@ const CATEGORIES_AND_CHANNELS = [
       { name: '👟・nike', type: 'text', readOnly: true },
       { name: '👟・adidas', type: 'text', readOnly: true },
       { name: '👟・jordan', type: 'text', readOnly: true },
+      { name: '👟・new-balance', type: 'text', readOnly: true },
       { name: '💀・corteiz', type: 'text', readOnly: true },
       { name: '🟥・supreme', type: 'text', readOnly: true },
       { name: '⭐・trapstar', type: 'text', readOnly: true },
       { name: '🎱・stussy', type: 'text', readOnly: true },
       { name: '🛠️・carhartt', type: 'text', readOnly: true },
+      { name: '🕶️・oakley', type: 'text', readOnly: true },
     ]
   },
   {
@@ -118,11 +125,13 @@ const CATEGORIES_AND_CHANNELS = [
     channels: [
       { name: '🐴・ralph-lauren', type: 'text', readOnly: true },
       { name: '🐊・lacoste', type: 'text', readOnly: true },
+      { name: '👖・diesel', type: 'text', readOnly: true },
       { name: '🧭・stone-island', type: 'text', readOnly: true },
       { name: '🏔️・the-north-face', type: 'text', readOnly: true },
       { name: '❄️・moncler', type: 'text', readOnly: true },
       { name: '🌴・palm-angels', type: 'text', readOnly: true },
       { name: '🦖・arcteryx', type: 'text', readOnly: true },
+      { name: '🌲・patagonia', type: 'text', readOnly: true },
     ]
   },
   {
@@ -207,8 +216,12 @@ client.once('ready', async () => {
       '👤 Membre',
       '📉 Baisses de Prix',
       '🦖 Arc\'teryx', '🌴 Palm Angels', '❄️ Moncler', '🛠️ Carhartt', '🏔️ The North Face',
+      '🌲 Patagonia',
       '🎱 Stussy', '⭐ Trapstar', '🧭 Stone Island', '🟥 Supreme', '💀 Corteiz',
+      '🕶️ Oakley',
+      '👖 Diesel',
       '🐊 Lacoste', '🐴 Ralph Lauren', '👟 Jordan', '👟 Adidas', '👟 Nike',
+      '👟 New Balance',
       '👑 Premium',
       '👑 Fondateur'
     ];
@@ -312,7 +325,7 @@ client.once('ready', async () => {
           if (createdRoles['👤 Membre']) {
             permissionOverwrites.push({
               id: createdRoles['👤 Membre'].id,
-              allow: [PermissionFlagsBits.ViewChannel],
+              allow: ch.readOnly ? [PermissionFlagsBits.ViewChannel] : [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
               deny: ch.readOnly ? [PermissionFlagsBits.SendMessages] : [],
             });
           }
@@ -325,7 +338,7 @@ client.once('ready', async () => {
           if (createdRoles['👑 Premium']) {
             permissionOverwrites.push({
               id: createdRoles['👑 Premium'].id,
-              allow: [PermissionFlagsBits.ViewChannel],
+              allow: ch.readOnly ? [PermissionFlagsBits.ViewChannel] : [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
               deny: ch.readOnly ? [PermissionFlagsBits.SendMessages] : [],
             });
           }
@@ -387,6 +400,58 @@ client.once('ready', async () => {
 
       await reglesChannel.send({ embeds: [reglesEmbed], components: [reglesRow] });
       console.log('   ✅ Message envoyé dans #📜・règles');
+    }
+
+    // Message dans #annonces
+    const annoncesChannel = createdChannels['📢・annonces'];
+    if (annoncesChannel) {
+      const annoncesMessage = 
+        '# ⚡ 𝕍𝕀ℕ𝕋𝔼𝔻 𝕊ℕIℙ𝔼ℝ 𝔹𝕆𝕋 ⚡\n\n' +
+        '> **Soyez le premier sur les meilleures affaires Vinted.**\n\n' +
+        'Notre sniper API ultra-rapide surveille les marques de votre choix 24h/24 et vous envoie les pépites directement ici avec un lien d\'achat direct **1-Clic**.\n\n' +
+        '---\n\n' +
+        '### 🌟 **Pourquoi nous rejoindre ?**\n' +
+        '* 🚀 **Vitesse absolue** : Alertes reçues en moins d\'une seconde, bien avant qu\'elles ne s\'affichent sur l\'application standard.\n' +
+        '* 💳 **Achat 1-Clic** : Un simple clic ouvre l\'application directement sur l\'écran de paiement final sécurisé.\n' +
+        '* 🎯 **Filtres précis** : Ciblez uniquement ce qui vous intéresse (taille, marque, prix max, état).\n\n' +
+        '---\n\n' +
+        '### 🎁 **Offre de lancement**\n' +
+        '* **3 JOURS D\'ESSAI GRATUIT** pour tester la puissance du bot.\n' +
+        '* Puis seulement **5,00€ / mois** pour un accès Premium complet.\n' +
+        '* *Attribution du rôle automatique dès l\'abonnement via Whop.*\n\n' +
+        '---\n\n' +
+        '## 🔗 **Découvrez notre site web et démarrez votre essai :**\n' +
+        '👉 https://hmz63911.github.io/vinted-sniper-bot/?v=2\n\n' +
+        '||@everyone||';
+
+      await annoncesChannel.send({ content: annoncesMessage });
+      console.log('   ✅ Message d\'annonce envoyé dans #📢・annonces');
+    }
+
+    // Message dans #mises-à-jour
+    const majChannel = createdChannels['🆕・mises-à-jour'];
+    if (majChannel) {
+      const majMessage = 
+        '# 🛠️ MISES À JOUR - VINTED SNIPER PRO\n\n' +
+        'Voici la liste des dernières améliorations appliquées à notre service pour optimiser vos performances de resell :\n\n' +
+        '### 🌐 **Nouveau Site Web & Boutique Officielle**\n' +
+        '* Notre site officiel est maintenant en ligne ! Retrouvez les tarifs et la démo animée : **https://hmz63911.github.io/vinted-sniper-bot/?v=2**\n' +
+        '* Intégration de **Whop** pour la boutique : l\'accès Premium est désormais automatisé (liaison et rôle attribués dès le paiement).\n\n' +
+        '### 🎯 **Algorithme & Recherches Vinted Optimisées**\n' +
+        '* Les requêtes pour les 15 marques phares (*Nike, Jordan, Corteiz, Supreme, Stone Island, Carhartt, Ralph Lauren...*) ont été affinées pour cibler uniquement les articles les plus recherchés.\n' +
+        '* **Plafonnement des prix d\'achat très bas** (de 20€ à 80€ max selon la marque) pour vous garantir des marges maximales.\n' +
+        '* Ajout de 4 nouvelles cibles lucratives : **Oakley, Diesel, Patagonia, et New Balance** (dans `#🛍️・toutes-alertes`).\n\n' +
+        '### 🛡️ **Sécurité Anti-Scam Activée**\n' +
+        '* Le système ignore désormais automatiquement les profils à 0 avis vendant des articles chers (> 100€) pour vous prémunir des contrefaçons.\n\n' +
+        '### ⚙️ **Correctifs & Expérience Utilisateur**\n' +
+        '* **Salons Déverrouillés** : Correction des permissions. Vous pouvez désormais discuter librement dans `#💬・général`, `#🔍・demandes` et `#⭐・bons-plans`.\n' +
+        '* **Tickets Améliorés** : Ajout du bouton `🔒 Fermer le Ticket` directement sous chaque réponse de l\'assistant pour faciliter la clôture.\n' +
+        '* **Stabilité** : Nettoyage des processus en double pour éviter les pings et les tickets doublonnés.\n\n' +
+        'Bonne chasse aux bonnes affaires ! 🔥\n\n' +
+        '||@everyone||';
+
+      await majChannel.send({ content: majMessage });
+      console.log('   ✅ Message de mise à jour envoyé dans #🆕・mises-à-jour');
     }
 
 
@@ -612,18 +677,22 @@ client.once('ready', async () => {
       '👟・nike',
       '👟・adidas',
       '👟・jordan',
+      '👟・new-balance',
       '💀・corteiz',
       '🟥・supreme',
       '⭐・trapstar',
       '🎱・stussy',
       '🛠️・carhartt',
+      '🕶️・oakley',
       '🐴・ralph-lauren',
       '🐊・lacoste',
+      '👖・diesel',
       '🧭・stone-island',
       '🏔️・the-north-face',
       '❄️・moncler',
       '🌴・palm-angels',
       '🦖・arcteryx',
+      '🌲・patagonia',
       '📉・baisses-de-prix',
       '🛍️・toutes-alertes'
     ];
