@@ -1,5 +1,5 @@
 {
-  "webhookUrl": "https://discord.com/api/webhooks/1510747335255130296/cub1KS6x_NfhuQlQHMTSRmdtUxpnm4w6UthxQFnUXUDz3-9xLdOdQmT-lMMZMNx5ZRdu",
+  "webhookUrl": "https://discord.com/api/webhooks/1511403880678822111/9f00fUxjutlFwt5bkb6qvvQ1F7nafTr4l-SL1urY811MI1_0AfMqchgexzY8WK84ZCgJ",
   "checkIntervalMs": 8000,
   "botStatus": {
     "text": "Snipe Vinted 🎯",
@@ -11,85 +11,85 @@
       "name": "🟥 Supreme",
       "url": "https://www.vinted.fr/catalog?search_text=supreme&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1510747316028444843/ehTltJe5TVgsxJJZmuAm9ozpQWof9DIoGmY7pI5FGPZmoZCduChenU-Am9ioCqJtTkAI"
+      "webhook": "https://discord.com/api/webhooks/1511403855244693654/c7RYo9W2kvqpPRpq8XCDiAcOJYHWHCBHcGUKhPtyGw_RksbuUuBaXgyRZdoxxjIPtQEu"
     },
     {
       "name": "💀 Corteiz",
       "url": "https://www.vinted.fr/catalog?search_text=corteiz&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1510747314833326280/sLQO7WRnxohIvqQSgESLymtWyYXwGu9ADMVXqtUUT0WqMi_tOhaQ83OxUCbh5IcTaMGR"
+      "webhook": "https://discord.com/api/webhooks/1511403853604716645/wsYIWSvRZauyWIPnwhsu8oFuovrC1Q6Vcoazq6z8-AOPkanwzLA3t57MYJJcGoDdXpdc"
     },
     {
       "name": "⭐ Trapstar",
       "url": "https://www.vinted.fr/catalog?search_text=trapstar&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1510747317341388902/A3ZPRkStEjdKY8JUsvfWAkydnM3YIO4h7OW99S-ewE2y1m4oZup3B5YaSa1EQm2JNQLi"
+      "webhook": "https://discord.com/api/webhooks/1511403857455087666/6hQKNkAsEBL166B4m_DWAA6ap5mXmLq5pDgupJ6X4KXUI6Fu9axN_iyKSpwxM8aaPz4a"
     },
     {
       "name": "🎱 Stussy",
       "url": "https://www.vinted.fr/catalog?search_text=stussy&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1510747318482374688/ZA3saFXJWXV3EDDsLjzp-eCMYtpPtEulrKFNqUDQdVg0SdiuuEtDOhW8v4nkKVkvUqWt"
+      "webhook": "https://discord.com/api/webhooks/1511403859317100594/V8O3WPz20qHFNYN3oc_GCOR4SmGyN3j5ijgpQ0BJVSHDhjObgwoOKH4NaZEe52pGI73s"
     },
     {
       "name": "🛠️ Carhartt",
       "url": "https://www.vinted.fr/catalog?search_text=carhartt&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1510747320302440572/8S6JnfASyYJzTleVmMIhBPuCR3XQw9mKXbv19LLrJ683-UeU62ISkiqiqn7gZmqX4O8p"
+      "webhook": "https://discord.com/api/webhooks/1511403861980479608/5UKv5smTLGC_G8GDCRFvad3NILIBlX_7qBrosq8JiaIEP1_O8MJg3kVFKcNKNE3IJFtz"
     },
     {
       "name": "👟 Nike",
       "url": "https://www.vinted.fr/catalog?search_text=nike&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1510747309577732237/2az17-0CerD18ru4xXW8jbmidzTGq5DBdtDQD4_OOqLbkDRatwVcxBF5qDir-zre6Hpq"
+      "webhook": "https://discord.com/api/webhooks/1511403839914250441/R8074DPGkkcnLDzaQrfRSG_JeKXdvwGdZvc8kYnvo4piBlF1Ld0qngtVEyYlgELhA--J"
     },
     {
       "name": "👟 Adidas",
       "url": "https://www.vinted.fr/catalog?search_text=adidas&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1510747311595065424/q2-QAJKC5uBZr3O1vy8l7DaOm5zagM9dwcWf0738IDXvrMzpYCgOhxCYRLfL95AR82fA"
+      "webhook": "https://discord.com/api/webhooks/1511403842636615825/qKT6evrm-kwDkz2xthzYWajIzyisfy0eEQAnfgr4Ur7luExFZkGakLDX7j-4a-Bsems3"
     },
     {
       "name": "👟 Jordan",
       "url": "https://www.vinted.fr/catalog?search_text=air+jordan&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1510747313314857107/5VaKoTTE9c7gTk-LEb1FcUK3NQlzFxmrOa0_4G8YnQoPRpeNaHX64MYdtbJ-yJBN9yWg"
+      "webhook": "https://discord.com/api/webhooks/1511403851989647390/n1FfdswDJGvZSjWDc5fBF-lvM_fh8aX3G9cyyIODTYaiJfyzca8ClKMs6s9nHJaNF4KI"
     },
     {
       "name": "🐴 Ralph Lauren",
       "url": "https://www.vinted.fr/catalog?search_text=ralph+lauren&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1510747322424889525/Ez7KPkqMIyceCyyjJ9lHDLoB86r7hjWPtMs9KCz6Wwu1WhhBXZmOpRX6CrLk9S8q2PB4"
+      "webhook": "https://discord.com/api/webhooks/1511403864706781286/1REP_RLXoyGc0nQ9Y6u_Qy6m4GXjWWRG-CFqiCgws4r0vZY66uZP9XjzqPh0WNoffmyq"
     },
     {
       "name": "🐊 Lacoste",
       "url": "https://www.vinted.fr/catalog?search_text=lacoste&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1510747324035502211/QkbiRi5FG6mXUASe5exMr6rXbeMfkSPUd-ZWn0RzQ5kt1DSvEzo9qTTf0GUVXEBloES0"
+      "webhook": "https://discord.com/api/webhooks/1511403866611122247/i49dlJbFBh1KCnbBTaxgPB3LK9IdkSWk3ZNFq5RJJ8WWZN-bAPEM6XFuf6xPtZVOqBns"
     },
     {
       "name": "🧭 Stone Island",
       "url": "https://www.vinted.fr/catalog?search_text=stone+island&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1510747325566423211/r9GGMsliuk2peFNX0e4-ns-AKbjHcIfnHcWyGd9nG22S-Q6U7XRu0dF0siaPARa7-NGC"
+      "webhook": "https://discord.com/api/webhooks/1511403868997812309/8k4iO-g24mgLfL5YprJYwDqPpJeZQ557waoNhE1PQNyxMi8S6JB0v2yRLFK6_PAG4C25"
     },
     {
       "name": "🏔️ The North Face",
       "url": "https://www.vinted.fr/catalog?search_text=the+north+face&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1510747327445340262/dniQhCOey5w3XhaJz6VxYjdiMEEJd6k6EaZHSe2OF_04q7Qfa4Od405-tq4aT8AXEybh"
+      "webhook": "https://discord.com/api/webhooks/1511403871493296319/OsoOSAFA2xqbYQQd0pFDgJ5crAhrk4JwlVCp7C4ak8MACJ8rpkjSoZTAFKcUEn1790x4"
     },
     {
       "name": "❄️ Moncler",
       "url": "https://www.vinted.fr/catalog?search_text=moncler&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1510747329140097115/kYk1mDhZRhFVDakZYJrxZzOKSd_4Iyfi_0m1BbpCZ1CBhUQ-5xXVqmPwk6Zrvs3L4nij"
+      "webhook": "https://discord.com/api/webhooks/1511403872944656535/3eewP1JWDf-f70h2f3ve-XXzJKk3dd1qDnYUJKb2lDBK2tbODmhagExf8i74GMf4F3FY"
     },
     {
       "name": "🌴 Palm Angels",
       "url": "https://www.vinted.fr/catalog?search_text=palm+angels&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1510747330440200294/zRmlngN-u986IQ6hvFptoLJXFYLS7k9d-PF5SN5AqPUx80McDYyp-4AnTw5XR_Cf-R-y"
+      "webhook": "https://discord.com/api/webhooks/1511403874479505559/WnH2d-SkYPrqMOrYy3rSNG-5zCcYqD-bNc-ren46lYVtl5uXg_2kKqYyRCt8eWif3U6A"
     },
     {
       "name": "🦖 Arc'teryx",
