@@ -1,5 +1,5 @@
 {
-  "webhookUrl": "https://discord.com/api/webhooks/1511403880678822111/9f00fUxjutlFwt5bkb6qvvQ1F7nafTr4l-SL1urY811MI1_0AfMqchgexzY8WK84ZCgJ",
+  "webhookUrl": "https://discord.com/api/webhooks/1511475504736108668/K2oal8o6ZsibeGBAowbBisM_uw_g0Ul5CrfRmXQRgd0TrMDiLBzcE0w2rJjkn9zvaELN",
   "checkIntervalMs": 8000,
   "botStatus": {
     "text": "Snipe Vinted 🎯",
@@ -9,100 +9,124 @@
   "searches": [
     {
       "name": "🟥 Supreme",
-      "url": "https://www.vinted.fr/catalog?search_text=supreme&order=newest_first",
+      "url": "https://www.vinted.fr/catalog?search_text=supreme+tee+hoodie&price_to=40&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1511403855244693654/c7RYo9W2kvqpPRpq8XCDiAcOJYHWHCBHcGUKhPtyGw_RksbuUuBaXgyRZdoxxjIPtQEu"
+      "webhook": "https://discord.com/api/webhooks/1511475463359561848/NWPMTAHSdxZV9swRc1d_GHwXE1lfzizml279_XC4lD3RlJDw2UrD_Ne0QSxpKccscP5i"
     },
     {
       "name": "💀 Corteiz",
-      "url": "https://www.vinted.fr/catalog?search_text=corteiz&order=newest_first",
+      "url": "https://www.vinted.fr/catalog?search_text=corteiz+cargo+tshirt+hoodie&price_to=45&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1511403853604716645/wsYIWSvRZauyWIPnwhsu8oFuovrC1Q6Vcoazq6z8-AOPkanwzLA3t57MYJJcGoDdXpdc"
+      "webhook": "https://discord.com/api/webhooks/1511475461841096904/pNzvDJ21jgTMfZsFJzQuPHWVzUMfppmNnMd2abzwM1VGIOSlEcEEaS1DIOS_y6PoWcOH"
     },
     {
       "name": "⭐ Trapstar",
-      "url": "https://www.vinted.fr/catalog?search_text=trapstar&order=newest_first",
+      "url": "https://www.vinted.fr/catalog?search_text=trapstar+ensemble+veste+hoodie&price_to=50&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1511403857455087666/6hQKNkAsEBL166B4m_DWAA6ap5mXmLq5pDgupJ6X4KXUI6Fu9axN_iyKSpwxM8aaPz4a"
+      "webhook": "https://discord.com/api/webhooks/1511475464873705475/Q-VBB0LuJ4b0TxpIn2kaR9DLSsS6wTRMjWIC3NKOh1OHFHEVxQyVEWgyPBqpuO8qenRc"
     },
     {
       "name": "🎱 Stussy",
-      "url": "https://www.vinted.fr/catalog?search_text=stussy&order=newest_first",
+      "url": "https://www.vinted.fr/catalog?search_text=stussy+tshirt+hoodie+casquette&price_to=30&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1511403859317100594/V8O3WPz20qHFNYN3oc_GCOR4SmGyN3j5ijgpQ0BJVSHDhjObgwoOKH4NaZEe52pGI73s"
+      "webhook": "https://discord.com/api/webhooks/1511475466949754960/rDJN1waFku9HQTYNfjjIhBJy-QmfL15pPmcEBR8sk68oB1I-7MJp_9bIaFbK16Zx9vnH"
     },
     {
       "name": "🛠️ Carhartt",
-      "url": "https://www.vinted.fr/catalog?search_text=carhartt&order=newest_first",
+      "url": "https://www.vinted.fr/catalog?search_text=carhartt+detroit+carpenter+double+knee+vintage&price_to=25&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1511403861980479608/5UKv5smTLGC_G8GDCRFvad3NILIBlX_7qBrosq8JiaIEP1_O8MJg3kVFKcNKNE3IJFtz"
+      "webhook": "https://discord.com/api/webhooks/1511475468296261864/bEmRu_-EQymJdTV1lcA-ywYXrPy5_bwkej359urcZ5a1Uepp9361VDr3KaaLP_oGciBF"
     },
     {
       "name": "👟 Nike",
-      "url": "https://www.vinted.fr/catalog?search_text=nike&order=newest_first",
+      "url": "https://www.vinted.fr/catalog?search_text=nike+vintage+middle+swoosh+hoodie&price_to=25&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1511403839914250441/R8074DPGkkcnLDzaQrfRSG_JeKXdvwGdZvc8kYnvo4piBlF1Ld0qngtVEyYlgELhA--J"
+      "webhook": "https://discord.com/api/webhooks/1511475454224105643/_sWjuINcOLTFYCvU5OQqbwdr0ypFDGZI2Y2urShSU9rFLmBS4hSOoVoODR8xcUyMwJyF"
     },
     {
       "name": "👟 Adidas",
-      "url": "https://www.vinted.fr/catalog?search_text=adidas&order=newest_first",
+      "url": "https://www.vinted.fr/catalog?search_text=adidas+campus+00s+gazelle+vintage+track+jacket&price_to=30&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1511403842636615825/qKT6evrm-kwDkz2xthzYWajIzyisfy0eEQAnfgr4Ur7luExFZkGakLDX7j-4a-Bsems3"
+      "webhook": "https://discord.com/api/webhooks/1511475456459804692/lIvUw2fT2LIiK0QPOyNkschVxOzzxqBTwmGLmEoVY8jm5HPofJnp8ENN0Dtc_Hi4mAVV"
     },
     {
       "name": "👟 Jordan",
-      "url": "https://www.vinted.fr/catalog?search_text=air+jordan&order=newest_first",
+      "url": "https://www.vinted.fr/catalog?search_text=jordan+1+4+dunk+low&price_to=45&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1511403851989647390/n1FfdswDJGvZSjWDc5fBF-lvM_fh8aX3G9cyyIODTYaiJfyzca8ClKMs6s9nHJaNF4KI"
+      "webhook": "https://discord.com/api/webhooks/1511475458103840848/wb35bsImniH0RmLmFBJyLbD8cyE1H_9HfvwG9G3ceL-L8sSYoXcrlFTCxwVX2_xrbYB2"
     },
     {
       "name": "🐴 Ralph Lauren",
-      "url": "https://www.vinted.fr/catalog?search_text=ralph+lauren&order=newest_first",
+      "url": "https://www.vinted.fr/catalog?search_text=ralph+lauren+cable+knit+zipper+vintage&price_to=20&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1511403864706781286/1REP_RLXoyGc0nQ9Y6u_Qy6m4GXjWWRG-CFqiCgws4r0vZY66uZP9XjzqPh0WNoffmyq"
+      "webhook": "https://discord.com/api/webhooks/1511475471701905501/8sx2goBjMcMDyj5fLo2ooxZhAiLmCJOc-Ce7Nikyn59-N-FFdi0Y3ZJs1989lw_gPsE1"
     },
     {
       "name": "🐊 Lacoste",
-      "url": "https://www.vinted.fr/catalog?search_text=lacoste&order=newest_first",
+      "url": "https://www.vinted.fr/catalog?search_text=lacoste+cardigan+vintage+zippe+casquette&price_to=25&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1511403866611122247/i49dlJbFBh1KCnbBTaxgPB3LK9IdkSWk3ZNFq5RJJ8WWZN-bAPEM6XFuf6xPtZVOqBns"
+      "webhook": "https://discord.com/api/webhooks/1511475479008383016/gW7QlyuUGCVIEmuD5SV15GJqrhXABDA749Y1PbpG_fKZ1xj_RnyXC7EUZXhxVfQy9TUh"
     },
     {
       "name": "🧭 Stone Island",
-      "url": "https://www.vinted.fr/catalog?search_text=stone+island&order=newest_first",
+      "url": "https://www.vinted.fr/catalog?search_text=stone+island+pull+veste&price_to=70&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1511403868997812309/8k4iO-g24mgLfL5YprJYwDqPpJeZQ557waoNhE1PQNyxMi8S6JB0v2yRLFK6_PAG4C25"
+      "webhook": "https://discord.com/api/webhooks/1511475482250575964/OR6Hn6tHTAVSSx2OgBZXtoxSU9ji-yYTHoMxSZ6a5-uJR9V6bOfsEctWTpL1FqBbehnL"
     },
     {
       "name": "🏔️ The North Face",
-      "url": "https://www.vinted.fr/catalog?search_text=the+north+face&order=newest_first",
+      "url": "https://www.vinted.fr/catalog?search_text=the+north+face+nuptse+doudoune+polaire&price_to=40&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1511403871493296319/OsoOSAFA2xqbYQQd0pFDgJ5crAhrk4JwlVCp7C4ak8MACJ8rpkjSoZTAFKcUEn1790x4"
+      "webhook": "https://discord.com/api/webhooks/1511475484657979393/78wtmzFxSOlsns5pDNVzJaZSR_gyfYvL7h1lkkO6v77JnE9ZkSpPtb15SDL-isOcdJnT"
     },
     {
       "name": "❄️ Moncler",
-      "url": "https://www.vinted.fr/catalog?search_text=moncler&order=newest_first",
+      "url": "https://www.vinted.fr/catalog?search_text=moncler+doudoune+polo+tshirt&price_to=80&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1511403872944656535/3eewP1JWDf-f70h2f3ve-XXzJKk3dd1qDnYUJKb2lDBK2tbODmhagExf8i74GMf4F3FY"
+      "webhook": "https://discord.com/api/webhooks/1511475486621040770/zdCFucOmcwp1ldtA-FEGvT0pKHMz_1gTAJS_UKmybSW3oA2sAYfFTff2tYSKX5-u2bCj"
     },
     {
       "name": "🌴 Palm Angels",
-      "url": "https://www.vinted.fr/catalog?search_text=palm+angels&order=newest_first",
+      "url": "https://www.vinted.fr/catalog?search_text=palm+angels+ensemble+tshirt&price_to=45&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1511403874479505559/WnH2d-SkYPrqMOrYy3rSNG-5zCcYqD-bNc-ren46lYVtl5uXg_2kKqYyRCt8eWif3U6A"
+      "webhook": "https://discord.com/api/webhooks/1511475489707921661/Oz89Y-wlJcoIpyRzCpYxYu_H87R84RrQbJwcCi5-IQe69j3yWNP9hvFXnStU91BodNUE"
     },
     {
       "name": "🦖 Arc'teryx",
-      "url": "https://www.vinted.fr/catalog?search_text=arcteryx&order=newest_first",
+      "url": "https://www.vinted.fr/catalog?search_text=arcteryx+veste+goretex+bonnet&price_to=80&order=newest_first",
       "ping": "",
-      "webhook": "https://discord.com/api/webhooks/1510711798851047545/a9DNiBr6b4mMqMQuBJZX56XGF1UIVHDsO9r929emkN68WvfdqtRL6KCqh69jhPivfo8i"
+      "webhook": "https://discord.com/api/webhooks/1511475492119908362/wQYA9ep9eZ0zHs69QfZjciyjb3FWBHcxVD9M87YTcn-L8asMPO-RCWdSsR5AGZkHNtwd"
+    },
+    {
+      "name": "🕶️ Oakley",
+      "url": "https://www.vinted.fr/catalog?search_text=oakley+lunettes+vintage+veste&price_to=30&order=newest_first",
+      "ping": "",
+      "webhook": "https://discord.com/api/webhooks/1511475470082768936/8VJ8IMxLrq8-71DSXvj7yaCW9Lbz-0eqJCykvxSmdu_wFUsKrPMIfHttVjtHzrVWJt5H"
+    },
+    {
+      "name": "👖 Diesel",
+      "url": "https://www.vinted.fr/catalog?search_text=diesel+jean+vintage+tshirt&price_to=25&order=newest_first",
+      "ping": "",
+      "webhook": "https://discord.com/api/webhooks/1511475480417665085/4nQnt34v8zHi5n2uLde8QmrOYVzJ9X5bpiIVlVTBYVYxS8H7eR1wLG7YpoLZVbiPZdoZ"
+    },
+    {
+      "name": "🌲 Patagonia",
+      "url": "https://www.vinted.fr/catalog?search_text=patagonia+polaire+veste&price_to=25&order=newest_first",
+      "ping": "",
+      "webhook": "https://discord.com/api/webhooks/1511475500067852409/rv8-fBqMNTUr0EqZdwguX-7ZRGPUjKC_JYs_P9UBUdqNJfK3VE1suot0m3NcyCJxbxEU"
+    },
+    {
+      "name": "👟 New Balance",
+      "url": "https://www.vinted.fr/catalog?search_text=new+balance+2002r+530+9060&price_to=40&order=newest_first",
+      "ping": "",
+      "webhook": "https://discord.com/api/webhooks/1511475460331278406/wle4O6sCNWT-6eqI49gejNq7ewPpi6TRBQklXPNsiVN9TKSbGTUl4EZXwwbjUe1UVt4h"
     }
   ],
   "proxies": [],
   "antiScam": {
-    "enabled": false,
-    "minFeedbackCount": 0,
-    "maxPriceForZeroFeedback": 150
+    "enabled": true,
+    "minFeedbackCount": 1,
+    "maxPriceForZeroFeedback": 100
   },
   "freeAlertDelayMs": 180000,
   "excludedKeywords": [
