@@ -901,6 +901,12 @@ export async function handleInteraction(interaction, configPath) {
               style: 3,
               label: '🙋 Parler à un Humain',
               custom_id: 'btn_parler_humain'
+            },
+            {
+              type: 2,
+              style: 4,
+              label: '🔒 Fermer le Ticket',
+              custom_id: 'btn_fermer_ticket'
             }
           ]
         };
@@ -950,7 +956,19 @@ export async function handleInteraction(interaction, configPath) {
         .setColor(0xe67e22)
         .setTimestamp();
 
-      await interaction.reply({ embeds: [humanEmbed] });
+      const closeRow = {
+        type: 1,
+        components: [
+          {
+            type: 2,
+            style: 4,
+            label: '🔒 Fermer le Ticket',
+            custom_id: 'btn_fermer_ticket'
+          }
+        ]
+      };
+
+      await interaction.reply({ embeds: [humanEmbed], components: [closeRow] });
 
       const adminChannel = interaction.guild.channels.cache.find(c => c.name.includes('config-bot') || c.name.includes('logs'));
       if (adminChannel) {
@@ -967,6 +985,47 @@ export async function handleInteraction(interaction, configPath) {
           await adminChannel.send({ content: '@everyone', embeds: [alertEmbed] });
         } catch (_) {}
       }
+      return;
+    }
+
+    if (customId === 'btn_fermer_ticket') {
+      const tickets = getTickets(configPath);
+      const ticketIdx = tickets.findIndex(t => t.channelId === interaction.channelId);
+
+      if (ticketIdx === -1) {
+        return interaction.reply({
+          content: '❌ Ce salon n\'est pas un ticket actif enregistré.',
+          ephemeral: true
+        });
+      }
+
+      const ticket = tickets[ticketIdx];
+      const isCreator = ticket.userId === interaction.user.id;
+      const isAdmin = interaction.member.permissions.has(PermissionFlagsBits.Administrator);
+
+      if (!isCreator && !isAdmin) {
+        return interaction.reply({
+          content: '❌ Seul l\'administrateur ou la personne qui a ouvert ce ticket peut le fermer.',
+          ephemeral: true
+        });
+      }
+
+      // Supprimer le ticket de la liste
+      tickets.splice(ticketIdx, 1);
+      saveTickets(configPath, tickets);
+
+      await interaction.reply({
+        content: '🔒 **Ticket Fermé**\nCe salon sera supprimé automatiquement dans **5 secondes**...'
+      });
+
+      setTimeout(async () => {
+        try {
+          await interaction.channel.delete();
+        } catch (err) {
+          console.error('[DISCORD] Impossible de supprimer le salon du ticket :', err.message);
+        }
+      }, 5000);
+
       return;
     }
 
@@ -1312,6 +1371,12 @@ export async function handleInteraction(interaction, configPath) {
         });
       }
 
+      // Répondre immédiatement de manière éphémère pour éviter le timeout de 3 secondes de Discord
+      await interaction.reply({
+        content: '⏳ **Initialisation de la session privée...** *(Veuillez patienter)*',
+        ephemeral: true
+      });
+
       try {
         // 1. Tenter d'ouvrir la discussion DM avec l'utilisateur
         const dmChannel = await interaction.user.createDM();
@@ -1320,10 +1385,9 @@ export async function handleInteraction(interaction, configPath) {
           content: `📸 **Studio IA - Photo Studio Blanc**\n\nVeuillez envoyer la photo de votre vêtement dans notre discussion privée **dans les 60 prochaines secondes**.\n\n*🔒 Cette discussion est 100% privée : personne d'autre sur le serveur ne verra votre photo brute ni votre image finale !*`
         });
 
-        // 2. Si l'envoi en DM a réussi, notifier l'utilisateur de manière éphémère sur le serveur public
-        await interaction.reply({
-          content: `📥 **Je vous ai envoyé un message privé !** Veuillez ouvrir nos messages privés pour y envoyer votre photo de vêtement en toute confidentialité.`,
-          ephemeral: true
+        // 2. Si l'envoi en DM a réussi, mettre à jour la réponse initiale de manière éphémère
+        await interaction.editReply({
+          content: `📥 **Je vous ai envoyé un message privé !** Veuillez ouvrir nos messages privés pour y envoyer votre photo de vêtement en toute confidentialité.`
         });
 
         // Démarrer le collector sur le canal DM privé
@@ -1449,14 +1513,13 @@ export async function handleInteraction(interaction, configPath) {
       } catch (err) {
         // En cas d'erreur lors de l'ouverture du DM (DMs fermés par l'utilisateur)
         console.warn(`[STUDIO IA] Impossible d'envoyer un DM à ${interaction.user.tag}:`, err.message);
-        return interaction.reply({
+        await interaction.editReply({
           content: `❌ **Impossible de vous envoyer un message privé.**\n\nPour des raisons de **confidentialité absolue**, le traitement s'effectue entièrement en message privé.\n\n` +
                    `**Comment autoriser les messages privés ?**\n` +
                    `1️⃣ Clic droit sur l'icône de notre serveur Discord.\n` +
                    `2️⃣ Allez dans **Paramètres de confidentialité**.\n` +
                    `3️⃣ Activez l'option **"Autoriser les messages privés provenant des membres du serveur"**.\n` +
-                   `4️⃣ Recliquez sur le bouton **Générer ma Photo Studio Blanc** !`,
-          ephemeral: true
+                   `4️⃣ Recliquez sur le bouton **Générer ma Photo Studio Blanc** !`
         });
       }
 
