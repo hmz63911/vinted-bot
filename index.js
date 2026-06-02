@@ -6,7 +6,7 @@ import express from 'express';
 import { execSync } from 'child_process';
 import { Client, GatewayIntentBits, Partials, ActivityType } from 'discord.js';
 import { fetchVintedItems, fetchSellerProfile } from './src/vintedApi.js';
-import { sendDiscordAlert, SLASH_COMMANDS, handleInteraction, handleMessage } from './src/discord.js';
+import { sendDiscordAlert, SLASH_COMMANDS, handleInteraction, handleMessage, cleanupDuplicateCategories } from './src/discord.js';
 
 dotenv.config();
 
@@ -438,13 +438,16 @@ if (isValidDiscordToken(TOKEN)) {
       console.error('[DISCORD] Impossible d\'initialiser le statut initial:', e.message);
     }
     
-    // Enregistrer les commandes slash sur chaque serveur
+    // Enregistrer les commandes slash et nettoyer les doublons de tickets sur chaque serveur
     for (const guild of client.guilds.cache.values()) {
       try {
         await guild.commands.set(SLASH_COMMANDS);
         console.log(`[DISCORD] Commandes Slash installées instantanément sur : ${guild.name}`);
+        
+        console.log(`[DISCORD] Lancement du nettoyage du système de tickets pour : ${guild.name}...`);
+        await cleanupDuplicateCategories(guild, CONFIG_PATH);
       } catch (err) {
-        console.error(`[DISCORD] Impossible de configurer les commandes sur ${guild.name}:`, err.message);
+        console.error(`[DISCORD] Impossible de configurer les commandes/nettoyage sur ${guild.name}:`, err.message);
       }
     }
 
